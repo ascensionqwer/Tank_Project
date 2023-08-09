@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 from image_processing import *
 from motor_control import *

@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import torch
 
-
 from phycv import VEVID_GPU, PST_GPU, PAGE_GPU
 
 # Image Processing Variables (PhyCV)
