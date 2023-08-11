@@ -5,11 +5,14 @@ from motor_control import *
 
 def main():
     # Control Variables
-    visual_ctrl = ""
+    visual_ctrl = "Normal"
     turn_on_obj = False
     movement = "Neutral"
     motor_speed = [0.0, 0.0] # [left, right]
     max_speed = 100.0
+
+    # Intro Frame
+    display_image("MonkiCorp.png")
 
     # Initialize the webcam
     cap = cv2.VideoCapture(0)
@@ -36,7 +39,7 @@ def main():
             visual_ctrl, turn_on_obj = input_control(key, visual_ctrl, turn_on_obj)
 
             # Display the processed frame
-            cv2.imshow('RC Visual', image_process(frame, device, visual_ctrl, turn_on_obj, movement, motor_speed, max_speed))
+            cv2.imshow("RC Visual", image_process(frame, device, visual_ctrl, turn_on_obj, movement, motor_speed, max_speed))
 
             if key == ord('q') or key == ord('Q'):
                 break
