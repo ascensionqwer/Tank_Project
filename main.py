@@ -11,9 +11,6 @@ def main():
     motor_speed = [0.0, 0.0] # [left, right]
     max_speed = 100.0
 
-    # Intro Frame
-    display_image("MonkiCorp.png")
-
     # Initialize the webcam
     cap = cv2.VideoCapture(0)
 
@@ -22,6 +19,9 @@ def main():
         print("Error: Couldn't open the camera.")
         return
 
+    # Intro Frame
+    display_image("MonkiCorp.png")
+    
     try:
         while True:
             # Capture frame-by-frame

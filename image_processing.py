@@ -91,7 +91,7 @@ def image_process(frame, device, input_ctrl, turn_on_obj, movement, motor_speed,
         retVal = page_gpu.run(img_array=img_tensor).numpy()
         retVal = cv2.normalize(page_gpu.run(img_array=img_tensor).numpy(), None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     if turn_on_obj:
-        retVal, objectInfo = getObjects(retVal, 0.35, 0.2)
+        retVal, objectInfo = getObjects(retVal, 0.5, 0.2)
     if Face_info is True:
         out = f_Face_info.get_face_info(retVal)
         retVal = f_Face_info.bounding_box(out, retVal)
