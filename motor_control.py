@@ -1,9 +1,10 @@
+import pygame
+
 # Constant(s)
 ITER_TO_NEUTRAL = 15
 
 # Control Variable(s)
 neutral_iter = 0
-stopped = True
 max_speed = 100.0
 
 class PIDController:
@@ -36,65 +37,81 @@ class PIDController:
         self.prev_setpoint = None
 
 
-def movement_process(key, movement, motor_speed):
+def movement_process(keys, movement, motor_speed):
     # Declare control variables as global
     global neutral_iter
-    global stopped
     global max_speed
 
-    stopped = False
-    pid = PIDController(0.3, 0.03, 0.03)
-    desired_speed = motor_speed
+    pid = PIDController(0.075, 0.075, 0.075)
+    desired_speed = motor_speed.copy()  # Create a copy so the original list isn't mutated directly
 
-    # Process the movement inputs and translate it to the motors and return the string of the action
-    if key == ord('w') or key == ord('W'):
-        movement = "Forward"
-        desired_speed = [max_speed, max_speed]
+    # Movement stopped check
+    if motor_speed == [0, 0]:
+        movement = "Stop"
+
+    # Check for movement keys
+    if keys[pygame.K_w]:  # Forward
+        if keys[pygame.K_d]:
+            desired_speed = [max_speed, 0]
+            movement = "Forward Right"
+        elif keys[pygame.K_a]:
+            desired_speed = [0, max_speed]
+            movement = "Forward Left"
+        else:
+            desired_speed = [max_speed, max_speed]
+            movement = "Forward"
         neutral_iter = 0
-    elif key == ord('s') or key == ord('S'):
-        movement = "Backward"
-        desired_speed = [-max_speed, -max_speed]
+    elif keys[pygame.K_s]:  # Backward
+        if keys[pygame.K_d]:
+            desired_speed = [-max_speed, 0]
+            movement = "Backward Right"
+        elif keys[pygame.K_a]:
+            desired_speed = [0, -max_speed]
+            movement = "Backward Left"
+        else:
+            desired_speed = [-max_speed, -max_speed]
+            movement = "Backward"
         neutral_iter = 0
-    elif key == ord('d') or key == ord('D'):
-        movement = "Turn Right"
+    elif keys[pygame.K_d]:  # Turn Right
         desired_speed = [max_speed, -max_speed]
+        movement = "Turn Right"
         neutral_iter = 0
-    elif key == ord('a') or key == ord('A'):
-        movement = "Turn Left"
+    elif keys[pygame.K_a]:  # Turn Left
         desired_speed = [-max_speed, max_speed]
+        movement = "Turn Left"
         neutral_iter = 0
-    elif key == ord(' ') and motor_speed != [0, 0]:
+    elif keys[pygame.K_SPACE] and motor_speed != [0, 0]:  # Brake
         movement = "Brake"
         neutral_iter = 0
         desired_speed = [0, 0]
-    elif (key == ord('i') or key == ord('I')):
-        if max_speed < 100:
-            max_speed += 10
-    elif (key == ord('k') or key == ord('K')):
-        if max_speed > 0:
-            max_speed -= 10
-    elif neutral_iter >= ITER_TO_NEUTRAL and motor_speed != [0, 0]:
+
+    # Check for speed adjustment keys
+    if keys[pygame.K_i] and max_speed < 100:  # Increase speed
+        max_speed += 10
+    if keys[pygame.K_k] and max_speed > 0:  # Decrease speed
+        max_speed -= 10
+
+    # Check for no movement
+    if neutral_iter >= ITER_TO_NEUTRAL and motor_speed != [0, 0]:
         movement = "Neutral"
-        desired_speed = [0, 0]  # Both motors going to a halt for neutral state
-        if motor_speed == [0, 0]:
-            stopped = True
-    
+        desired_speed = [0, 0]
+
     neutral_iter += 1
-    if stopped is True:
-        movement = "Stop"
-    
+
+    # Apply PID control and adjust motor speeds
     for i in range(2):
-        # less than one percent, motor_speed =  desired_speed
-        if abs((desired_speed[i] - motor_speed[i])) <= 1:
+        if abs(desired_speed[i] - motor_speed[i]) <= 1:
             motor_speed[i] = desired_speed[i]
-            continue
-            
-        # PID controllers adjust the motor speeds
-        motor_speed[i] += pid.compute(desired_speed[i], motor_speed[i])
-        # Round to two decimal places
-        motor_speed[i] = round(motor_speed[i], 2)
+        else:
+            motor_speed[i] += pid.compute(desired_speed[i], motor_speed[i])
+            motor_speed[i] = round(motor_speed[i], 2)  # Round to two decimal places
 
     return movement, motor_speed, max_speed
 
+
 def percentage_to_pwm(percentage, max_pwm_value):
-    return (percentage / 100) * max_pwm_value
+    counter_turn = False
+    pwm_val = (percentage / 100) * max_pwm_value
+    if pwm_val < 0:
+        counter_turn = True
+    return abs(pwm_val), counter_turn
